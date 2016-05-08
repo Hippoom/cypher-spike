@@ -6,8 +6,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public final class CipherUtils {
     private CipherUtils() {
@@ -16,7 +16,7 @@ public final class CipherUtils {
     /**
      * Streams is preferred for parameters so that it will be easier to support {@link java.io.File} after
      */
-    public static void transform(Cipher cipher, ByteArrayInputStream toBeEncryptedInputStream, ByteArrayOutputStream encryptedOutputStream, int blockSize) throws IOException, IllegalBlockSizeException, BadPaddingException {
+    public static void transform(Cipher cipher, ByteArrayInputStream toBeEncryptedInputStream, OutputStream encryptedOutputStream, int blockSize) throws IOException, IllegalBlockSizeException, BadPaddingException {
         byte[] buf = new byte[blockSize];
 
         int len;

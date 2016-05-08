@@ -7,6 +7,7 @@ import javax.crypto.spec.IvParameterSpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -28,14 +29,18 @@ public class AesEncryptor {
     }
 
     public ByteArrayOutputStream encrypt(SecretKey secretKey, ByteArrayInputStream toBeEncryptedInputStream) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException, IllegalBlockSizeException, BadPaddingException {
+        try (ByteArrayOutputStream encryptedOutputStream = new ByteArrayOutputStream()) {
+            encrypt(secretKey, toBeEncryptedInputStream, encryptedOutputStream);
+            return encryptedOutputStream;
+        }
+    }
+
+    public void encrypt(SecretKey secretKey, ByteArrayInputStream toBeEncryptedInputStream, OutputStream encryptedOutputStream) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidAlgorithmParameterException, IOException, BadPaddingException, IllegalBlockSizeException {
         byte[] iv = iDontKnowWhyIvIsGeneratedInThisWay(secretKey);
         Cipher cipher = cipher(provider, secretKey, ENCRYPT_MODE, new IvParameterSpec(iv));
 
-        try (ByteArrayOutputStream encryptedOutputStream = new ByteArrayOutputStream()) {
-            encryptedOutputStream.write(iv); // the beginning of the stream is IV?
-            transform(cipher, toBeEncryptedInputStream, encryptedOutputStream);
-            return encryptedOutputStream;
-        }
+        encryptedOutputStream.write(iv); // the beginning of the stream is IV?
+        transform(cipher, toBeEncryptedInputStream, encryptedOutputStream);
     }
 
     public ByteArrayOutputStream decrypt(SecretKey secretKey, ByteArrayInputStream encryptedInputStream) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
@@ -72,8 +77,9 @@ public class AesEncryptor {
     /**
      * Streams is preferred for parameters so that it will be easier to support {@link java.io.File} after
      */
-    private void transform(Cipher cipher, ByteArrayInputStream toBeEncryptedInputStream, ByteArrayOutputStream encryptedOutputStream) throws IOException, IllegalBlockSizeException, BadPaddingException {
+    private void transform(Cipher cipher, ByteArrayInputStream toBeEncryptedInputStream, OutputStream encryptedOutputStream) throws IOException, IllegalBlockSizeException, BadPaddingException {
         CipherUtils.transform(cipher, toBeEncryptedInputStream, encryptedOutputStream, blockSize);
     }
+
 
 }
