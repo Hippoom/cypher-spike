@@ -19,6 +19,10 @@ import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
+/**
+ * For IV, check here:http://security.stackexchange.com/questions/35210/encrypting-using-aes-256-do-i-need-iv
+ *
+ */
 public class AesLearningTest {
 
     private static final int BLOCK_SIZE = 4 * 256;
