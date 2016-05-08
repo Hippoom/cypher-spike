@@ -1,4 +1,4 @@
-package spike.cypher.aes;
+package spike.cypher;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.ByteArrayInputStream;
@@ -40,6 +39,8 @@ public class RsaLearningTest {
     private Key privateKey;
     private Key publicKey;
 
+    private RsaEncryptor subject = new RsaEncryptor(PROVIDER, BLOCK_SIZE);
+
     @Before
     public void setup() throws InvalidKeyException {
         // I don't why der is preferred over pem - -||
@@ -53,11 +54,11 @@ public class RsaLearningTest {
 
         try (ByteArrayInputStream toBeEncryptedInputStream = new ByteArrayInputStream(toBeEncrypted.getBytes())) {
 
-            ByteArrayOutputStream encryptedOutputStream = encrypt(publicKey, toBeEncryptedInputStream);
+            ByteArrayOutputStream encryptedOutputStream = subject.encrypt(publicKey, toBeEncryptedInputStream);
 
             try (ByteArrayInputStream encryptedInputStream = new ByteArrayInputStream(encryptedOutputStream.toByteArray())) {
 
-                ByteArrayOutputStream decryptedOutputStream = decrypt(privateKey, encryptedInputStream);
+                ByteArrayOutputStream decryptedOutputStream = subject.decrypt(privateKey, encryptedInputStream);
 
                 assertThat(decryptedOutputStream.toString(), is(toBeEncrypted));
             }
@@ -86,41 +87,4 @@ public class RsaLearningTest {
         }
     }
 
-    private ByteArrayOutputStream encrypt(Key publicKey, ByteArrayInputStream inputStream) throws IOException, NoSuchProviderException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            Cipher cipher = cipher(Cipher.ENCRYPT_MODE, publicKey);
-            transform(cipher, inputStream, outputStream);
-
-            return outputStream;
-        }
-    }
-
-    private ByteArrayOutputStream decrypt(Key privateKey, ByteArrayInputStream inputStream) throws IOException, NoSuchProviderException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            Cipher cipher = cipher(Cipher.DECRYPT_MODE, privateKey);
-            transform(cipher, inputStream, outputStream);
-
-            return outputStream;
-        }
-    }
-
-    private Cipher cipher(int mode, Key key) throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", PROVIDER);
-        cipher.init(mode, key);
-        return cipher;
-    }
-
-    /**
-     * Streams is preferred for parameters so that it will be easier to support {@link java.io.File} after
-     */
-    private void transform(Cipher cipher, ByteArrayInputStream toBeEncryptedInputStream, ByteArrayOutputStream encryptedOutputStream) throws IOException, IllegalBlockSizeException, BadPaddingException {
-        byte[] buf = new byte[BLOCK_SIZE];
-
-        int len;
-        while ((len = ByteStreams.read(toBeEncryptedInputStream, buf, 0, BLOCK_SIZE)) == BLOCK_SIZE) {
-            encryptedOutputStream.write(cipher.update(buf));
-        }
-
-        encryptedOutputStream.write(cipher.doFinal(buf, 0, len));
-    }
 }
