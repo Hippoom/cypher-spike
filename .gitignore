@@ -1,0 +1,13 @@
+#intelij
+.idea
+*.iml
+
+#gradle
+build
+.gradle
+
+#osx
+.DS_Store
+
+#local
+application-dev.yml
